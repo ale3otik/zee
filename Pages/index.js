@@ -1,0 +1,2 @@
+screen.availWidth;
+screen.availHeight;

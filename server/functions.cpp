@@ -1,4 +1,5 @@
 #include "main_header.h"
+#include <ctime>
 
 using namespace std;
 extern map<int,connection_info> connections;
@@ -7,12 +8,30 @@ extern map<int,connection_info> connections;
 *****************CONFIGURATION READ FUNCTIONS**********************
 **
 ***/
+void add_new_ip_visitor(const connection_info & info) 
+{
+	FILE * fp;
+	fp = fopen(SAVE_INFO_FILENAME,"a");
+	if(fp == NULL) {
+		cout << "A" <<endl;
+	 	return;
+	}
+	string out = info.ip.str;
+
+	time_t seconds = time(NULL);
+	tm * timeinfo = localtime(&seconds);
+	out  += " << " + string(asctime(timeinfo));
+
+	fwrite(out.c_str(),sizeof(char),out.size(),fp);
+	fclose(fp);
+}
 
 int get_config_int_options(const char * options_name, bool & error_state)
 {
 	const string options_name_string(options_name);
 	return get_config_int_options(options_name_string, error_state);
 }
+
 int get_config_int_options(const string & options_name, bool & error_state)
 {
 	int option = 0;

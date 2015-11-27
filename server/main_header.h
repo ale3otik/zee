@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <time.h>
 
 //constants
 #define CONFIG_FILENAME "servconf.cfg"
@@ -25,6 +26,7 @@
 #define STANDART_NUM_CONNECTIONS 150
 #define STANDART_START_PAGE "index.html"
 #define IP_LENGTH 17
+#define SAVE_INFO_FILENAME "_ip_list_connections.txt"
 //structs
 
 enum http_query_type
@@ -52,4 +54,6 @@ typedef struct connection_info connection_info ;
 		void process_query(std::stringstream & answer_full, const char * buf, int length); 
 	//socket_work.cpp
 		int make_socket();
+	// file save
+		void add_new_ip_visitor(const connection_info & info);
 #endif

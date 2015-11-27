@@ -81,8 +81,10 @@ int main()
 		cout<<NUM_CONNECTIONS<<endl;
 	#endif
 
+	// create demon
 	chdir("../Pages");
 	if(fork()) return 0;
+
 	#ifdef _HIDE_SERVER_ 
 		close(0); close(1); close(2);
 		pid_t pid = getpid();
@@ -92,13 +94,16 @@ int main()
 	struct sockaddr_in tmp_addr;
 	int tmp_fd;
 	socklen_t len;
-	while(1)
+	while(true)
 	{	
 		tmp_fd = tmp_inf.fd =accept(socket_id,(struct sockaddr *)&tmp_addr,&len);
 		tmp_inf.ip.bytes = tmp_addr.sin_addr.s_addr;
 		strcpy(tmp_inf.ip.str,inet_ntoa(tmp_addr.sin_addr));
 		tmp_inf.id = next_connection_id;
 		++next_connection_id;
+
+		add_new_ip_visitor(tmp_inf);
+		
 		#ifndef _HIDE_SERVER_
 			cout<< "Conected: "<<tmp_inf.ip.str << "id: "<< tmp_inf.id<<endl;
 		#endif

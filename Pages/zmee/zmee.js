@@ -436,8 +436,8 @@ window.onerror = function(msg, url, line) {
 			window.clearTimeout(this.timeoutID);	
 			window.onkeydown = function(){};
 			
-			//document.body.removeChild(this.drawText.elements["score"]);
-			//document.body.removeChild(this.drawText.elements["best_score"]);
+			// document.body.removeChild(this.drawText.elements["score"]);
+			// document.body.removeChild(this.drawText.elements["best_score"]);
 
 			this.context.fillStyle = this.background_color;
 			this.context.fillRect(6,6,this.width-12,this.height-12);
@@ -488,7 +488,7 @@ window.onerror = function(msg, url, line) {
 								initNewGame();
 							};
 						},
-						1000);
+						10);
 		}
 
 		return new_game;

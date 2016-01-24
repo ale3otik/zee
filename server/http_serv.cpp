@@ -1,4 +1,3 @@
-
 #include "main_header.h"
 using namespace std;
 
@@ -7,6 +6,7 @@ using namespace std;
 map<int,connection_info> connections;
 map<int,pthread_t> threads;
 size_t next_connection_id = 0;
+
 void * session_handler(void * id_ptr)
 {
 
@@ -32,10 +32,10 @@ void * session_handler(void * id_ptr)
 		buf[result] = 0;
 		stringstream answer_full;
 
-		#ifndef _HIDE_SERVER
+		#ifndef _HIDE_SERVER_
 			printf("%s\n", buf);
 		#endif
-			
+
 		process_query(answer_full,buf,result); //update 
 		
 		//result = write(fd, answer_full.str().c_str(),answer_full.str().length());
@@ -62,10 +62,16 @@ void * session_handler(void * id_ptr)
 **
 *****/
 
+int socket_id;
+void sig_handler(int sig) {
+	close(socket_id);
+	exit(0);
+}
 
 int main()
 {
-	int socket_id = make_socket();
+	socket_id = make_socket();
+	signal(SIGINT,sig_handler);
 	bool is_error;
 	int NUM_CONNECTIONS = get_config_int_options("NUM_CONNECTIONS", is_error);
 	connection_info tmp_inf;
@@ -125,6 +131,7 @@ int main()
 		}
 		
 	}
+
 	close(socket_id);
 	cerr<<"EXIT PROGRAMM\n";
 	return 0;

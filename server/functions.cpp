@@ -183,7 +183,7 @@ bool process_script(string & fname, int rpos, const char * buf, stringstream & a
 	if(fildes_to[0] < 0 || fildes_to[1] < 0) return false;
 	if(fildes_from[0] < 0 || fildes_from[1] < 0) return false;
 	string result_name = "cgi_scripts/" + fname;
-	printf("%s\n",result_name.c_str());
+	
 	if(!fork()) {
 		close(fildes_from[0]);
 		close(fildes_to[1]);
@@ -248,7 +248,6 @@ void process_query(stringstream & answer_full,const char * buf,const int result)
 	{
 		if(asking_file_name.length() > 0 && asking_file_name[0] == '/') asking_file_name.erase(0,1);
 		is_succes_query = process_script(asking_file_name,result_position, buf, answer_body);
-
 	}
 	else if(query_type == ERROR)
 	{

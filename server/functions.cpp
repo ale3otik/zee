@@ -1,5 +1,18 @@
 #include "main_header.h"
 #include <ctime>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <signal.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <uuid/uuid.h>
 
 using namespace std;
 extern map<int,connection_info> connections;
@@ -83,6 +96,7 @@ int get_config_int_options(const string & options_name, bool & error_state)
 bool path_warning_detected(const string & path)
 {
 	if(path.length() == 0) return false;
+	if(path.find("cgi_scripts") != string::npos) return true;
 	//if(path[0] == '/') return true;
 	for(int i = 0; i < path.length()-1;++i)
 	{
@@ -91,7 +105,7 @@ bool path_warning_detected(const string & path)
 	return false;
 }
 
-http_query_type get_http_query(string & answer, const char * data)
+http_query_type get_http_query(string & ask_filename, int & result_position, const char * data)
 {
 	http_query_type query_type = ERROR;
 	string data_str(data);
@@ -104,13 +118,15 @@ http_query_type get_http_query(string & answer, const char * data)
 	
 	for(position+= 1;position < data_str.length() && data_str[position]!=' ' && data_str[position]!='\n'; ++position)
 	{
-		answer+=data_str[position];
+		ask_filename += data_str[position];
 	}
 
+	result_position = position;
+	
     if(first_word == "GET")
 	{
+		if(path_warning_detected(ask_filename)) return ERROR;
 		query_type = GET;
-		if(path_warning_detected(answer)) query_type = ERROR;
 	}
 	else if(first_word == "POST")
 	{
@@ -121,6 +137,7 @@ http_query_type get_http_query(string & answer, const char * data)
 	{
 		query_type = ERROR;
 	}
+
 	return query_type;
 }
 
@@ -143,6 +160,59 @@ void streams_copy(string & to,int fd_from)
 	}while(length > 0);
 }
 
+void get_from_file(int fd, stringstream & answer) {
+	int sz;
+	char buf[512];
+	while(true) {
+		sz = read(fd, buf, 511);
+		if(sz <= 0) break;
+		buf[sz] = 0;
+		answer << buf;
+	} 
+}
+
+/*******************POST SCRIPT DETECTED*******/
+bool process_script(string & fname, int rpos, const char * buf, stringstream & answer_body) {
+	string ans_body_str;
+	string data(buf);
+	data.erase(0,rpos);
+	int fildes_to[2];
+	int fildes_from[2];
+	pipe(fildes_to);
+	pipe(fildes_from);
+	if(fildes_to[0] < 0 || fildes_to[1] < 0) return false;
+	if(fildes_from[0] < 0 || fildes_from[1] < 0) return false;
+	string result_name = "cgi_scripts/" + fname;
+	printf("%s\n",result_name.c_str());
+	if(!fork()) {
+		close(fildes_from[0]);
+		close(fildes_to[1]);
+		dup2(fildes_to[0],0);
+		dup2(fildes_from[1],1);
+
+		// only java programms allowed
+		if(fname.find(".jar") != string::npos){
+			execlp("java","java","-jar",result_name.c_str(),0);
+		}
+
+		printf("#$#!^errorexeclp#");
+		close(0);
+		close(1);
+		exit(0);
+	}
+
+	close(fildes_from[1]);
+	close(fildes_to[0]);
+	
+	write(fildes_to[1],data.c_str(),data.length());
+	get_from_file(fildes_from[0],answer_body);
+
+	close(fildes_from[0]);
+	close(fildes_to[1]);
+
+	if(answer_body.str().substr(0,18) == "#$#!^#errorexeclp#") return false;
+	return true;
+}
 /****************GENERAL HANDLER***************/
 void process_query(stringstream & answer_full,const char * buf,const int result)
 {
@@ -150,7 +220,8 @@ void process_query(stringstream & answer_full,const char * buf,const int result)
 	stringstream answer_head;
 	stringstream answer_body;
 	string asking_file_name = "";
-	http_query_type query_type = get_http_query(asking_file_name, buf);
+	int result_position;
+	http_query_type query_type = get_http_query(asking_file_name,result_position,buf);
 	
 	if(query_type == GET)
 	{
@@ -175,6 +246,9 @@ void process_query(stringstream & answer_full,const char * buf,const int result)
 	}
 	else if(query_type == POST)
 	{
+		if(asking_file_name.length() > 0 && asking_file_name[0] == '/') asking_file_name.erase(0,1);
+		is_succes_query = process_script(asking_file_name,result_position, buf, answer_body);
+
 	}
 	else if(query_type == ERROR)
 	{

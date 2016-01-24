@@ -31,6 +31,11 @@ void * session_handler(void * id_ptr)
 
 		buf[result] = 0;
 		stringstream answer_full;
+
+		#ifndef _HIDE_SERVER
+			printf("%s\n", buf);
+		#endif
+			
 		process_query(answer_full,buf,result); //update 
 		
 		//result = write(fd, answer_full.str().c_str(),answer_full.str().length());
@@ -82,6 +87,7 @@ int main()
 	#endif
 
 	// create demon
+		
 	chdir("../Pages");
 	if(fork()) return 0;
 
@@ -91,6 +97,7 @@ int main()
 		setpgid(pid,pid);
 		//tcsetpgrp(0 /* stdin */,0);
 	#endif
+
 	struct sockaddr_in tmp_addr;
 	int tmp_fd;
 	socklen_t len;

@@ -1,0 +1,17 @@
+<title> Test Post</title>
+<body>
+    </br>
+    <b> Hello <b/>
+<script type="text/javascript">
+    var ajax = new XMLHttpRequest();
+    ajax.onreadystatechange = function() {
+        if (ajax.readyState == 4 && ajax.status == 200) {
+            var response = ajax.responseText;
+            alert(response);
+        }
+    };
+    ajax.open("POST", "http://localhost:5000/testmodule.jar", true);
+    ajax.setRequestHeader("Content-type", "application/json");
+    ajax.send(document.toString());
+</script>
+<body/>

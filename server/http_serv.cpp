@@ -1,4 +1,5 @@
 #include "main_header.h"
+#include <signal.h>
 using namespace std;
 
 #define _HIDE_SERVER_
@@ -94,6 +95,7 @@ int main()
 
 	// create demon
 		
+	chroot("~");
 	chdir("../Pages");
 	if(fork()) return 0;
 

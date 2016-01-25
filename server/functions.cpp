@@ -1,18 +1,4 @@
 #include "main_header.h"
-#include <ctime>
-#include <unistd.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <pwd.h>
-#include <uuid/uuid.h>
 
 using namespace std;
 extern map<int,connection_info> connections;
@@ -96,12 +82,14 @@ int get_config_int_options(const string & options_name, bool & error_state)
 bool path_warning_detected(const string & path)
 {
 	if(path.length() == 0) return false;
-	if(path.find("cgi_scripts") != string::npos) return true;
-	//if(path[0] == '/') return true;
+	if(path[0] == '/') return true;
+	if(path[0] == '~') return true;
 	for(int i = 0; i < path.length()-1;++i)
 	{
+		if(path[i+1] == '~') return true;
 		if(path[i] == '.' && path[i+1] == '.') return true;
 	}
+
 	return false;
 }
 
@@ -122,15 +110,14 @@ http_query_type get_http_query(string & ask_filename, int & result_position, con
 	}
 
 	result_position = position;
-	
+	if(path_warning_detected(ask_filename)) return ERROR;
     if(first_word == "GET")
 	{
-		if(path_warning_detected(ask_filename)) return ERROR;
+		if(ask_filename.find("cgi_scripts") != string::npos) return ERROR;
 		query_type = GET;
 	}
 	else if(first_word == "POST")
 	{
-		//обработка post
 		query_type = POST;
 	}
 	else
@@ -192,10 +179,10 @@ bool process_script(string & fname, int rpos, const char * buf, stringstream & a
 
 		// only java programms allowed
 		if(fname.find(".jar") != string::npos){
-			execlp("java","java","-jar",result_name.c_str(),0);
+			execlp("~/jre1.8.0_71/bin/java","java","-jar",result_name.c_str(),0);
 		}
 
-		printf("#$#!^errorexeclp#");
+		printf("#$#!^#errorexeclp#");
 		close(0);
 		close(1);
 		exit(0);

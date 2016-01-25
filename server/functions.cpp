@@ -12,7 +12,6 @@ void add_new_ip_visitor(const connection_info & info)
 	FILE * fp;
 	fp = fopen(SAVE_INFO_FILENAME,"a");
 	if(fp == NULL) {
-		cout << "A" <<endl;
 	 	return;
 	}
 	string out = info.ip.str;
@@ -82,7 +81,7 @@ int get_config_int_options(const string & options_name, bool & error_state)
 bool path_warning_detected(const string & path)
 {
 	if(path.length() == 0) return false;
-	if(path[0] == '/') return true;
+	//if(path[0] == '/') return true;
 	if(path[0] == '~') return true;
 	for(int i = 0; i < path.length()-1;++i)
 	{
@@ -169,18 +168,20 @@ bool process_script(string & fname, int rpos, const char * buf, stringstream & a
 	pipe(fildes_from);
 	if(fildes_to[0] < 0 || fildes_to[1] < 0) return false;
 	if(fildes_from[0] < 0 || fildes_from[1] < 0) return false;
-	string result_name = "cgi_scripts/" + fname;
+	string result_name = "/home/aleksey-zotov/zmee2/zmee/Pages/cgi_scripts" + fname;
 	
 	if(!fork()) {
 		close(fildes_from[0]);
 		close(fildes_to[1]);
 		dup2(fildes_to[0],0);
 		dup2(fildes_from[1],1);
+		dup2(fildes_from[1],2);
 
-		// only java programms allowed
+		// only java programms supported
 		if(fname.find(".jar") != string::npos){
-			execlp("~/jre1.8.0_71/bin/java","java","-jar",result_name.c_str(),0);
-		}
+                chdir("/home/aleksey-zotov/jre1.8.0_71/bin");
+                execl("java","java","-jar",result_name.c_str(),0);
+        }
 
 		printf("#$#!^#errorexeclp#");
 		close(0);

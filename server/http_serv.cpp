@@ -95,7 +95,7 @@ int main()
 
 	// create demon
 		
-	chroot("~");
+	// chroot("~");
 	chdir("../Pages");
 	if(fork()) return 0;
 
